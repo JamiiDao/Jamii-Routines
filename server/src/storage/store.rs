@@ -42,6 +42,15 @@ impl AppDb {
                     email_auth_time BLOB,
                     email_auth_expiry BLOB
                 );
+
+                CREATE TABLE IF NOT EXISTS sessions (
+                    token TEXT PRIMARY KEY,
+                    user_name TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    expires_at TEXT NOT NULL,
+
+                    FOREIGN KEY(user_name) REFERENCES users(name) ON DELETE CASCADE
+                );
                 "#,
         )
         .execute(&self.db)

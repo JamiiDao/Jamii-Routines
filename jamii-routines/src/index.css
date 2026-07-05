@@ -5,6 +5,7 @@
   --foreground: #000000;
   --secondary: #3636c9;
   --accent: #3636c9;
+  --complement: #040473;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -12,7 +13,7 @@
     --background: #000000;
     --foreground: #ffffff;
     --secondary: #3636c9;
-    --accent: #a2a2e6;
+    --accent: #ffffff;
   }
 }
 
@@ -21,9 +22,30 @@
   --color-secondary: var(--secondary);
   --color-accent: var(--accent);
   --color-foreground: var(--foreground);
+  --color-complement: var(--complement);
   --font-heading: "Permanent Marker", sans-serif;
   --font-normal: "Nunito", sans-serif;
-  --font-monospace: "Iosevka Charon Mono", sans-serif
+  --font-monospace: "Iosevka Charon Mono", sans-serif;
+}
+
+@keyframes infinite-loader {
+  0% {
+    left: -35%;
+    width: 30%;
+  }
+
+  50% {
+    width: 55%;
+  }
+
+  100% {
+    left: 100%;
+    width: 30%;
+  }
+}
+
+@theme inline {
+  --animate-infinite-loader: infinite-loader 1.6s ease-in-out infinite;
 }
 
 @layer base {

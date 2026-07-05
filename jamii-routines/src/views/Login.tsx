@@ -1,11 +1,177 @@
+import { useState } from "react";
 import Header from "../components/header";
-
+import { AppRoutes } from "../App";
+import { Link } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
+import getHref from "../components/href";
+import Loader from "../components/Loader";
 
 export default function Login() {
+    const [email, setEmail] = useState("");
+
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+    const [processing, setProcessing] = useState(false);
+
+    const [response, setResponse] = useState({
+        status: 0,
+        error: "",
+    });
+    const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setEmail(e.target.value.trim());
+
+        setResponse({
+            status: 0,
+            error: "",
+        });
+    };
+
+    let href = getHref("login");
+
+    const runProcessing = async () => {
+        setProcessing(true);
+
+        try {
+            const body = {
+                email: email || null,
+            };
+
+            const response = await fetch(href, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: "include",
+                body: JSON.stringify(body),
+            });
+
+            const parseResponse = await response.json();
+
+            console.log(response.status);
+            console.log(response.redirected);
+            console.log(response.url);
+
+            setResponse({
+                status: response.status,
+                error: parseResponse.message,
+            });
+
+        } catch (err) {
+            console.error(err);
+        }
+
+        setProcessing(false);
+
+    };
+
     return (
         <>
             <Header />
-            <div>Login PAGE</div>
+            <div className="flex flex-col w-full items-center justify-around min-h-full flex-1">
+                <div className="flex flex-col justify-center items-center">
+                    <PasskeyPhone />
+                    <div className="font-heading text-4xl text-accent">Passkey Login</div>
+                </div>
+                <div className="w-full max-w-lg mx-auto">
+                    <div className="flex w-full shadow-xs rounded-base">
+                        <span className="inline-flex items-center px-3 text-sm text-body bg-neutral-tertiary border rounded-s-full border-default-medium border-e-0 rounded-s-base">
+                            <svg
+                                className="w-4 h-4 text-body"
+                                aria-hidden="true"
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke="currentColor"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0a8.949 8.949 0 0 0 4.951-1.488A3.987 3.987 0 0 0 13 16h-2a3.987 3.987 0 0 0-3.951 3.512A8.948 8.948 0 0 0 12 21Zm3-11a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                                />
+                            </svg>
+                        </span>
+
+                        <input
+                            type="text"
+                            id="email-data"
+                            value={email}
+                            disabled={processing}
+                            onChange={handleEmailChange}
+                            className="rounded-none rounded-e-full block w-full px-3 py-2.5 bg-neutral-secondary-medium border border-default-medium text-heading text-sm focus:ring-brand focus:border-brand placeholder:text-body"
+                            placeholder="Enter your email address"
+                        />
+                    </div>
+
+                    {email !== "" && !isValidEmail && (
+                        <p className="mt-2 text-sm text-red-500">
+                            Invalid email address.
+                        </p>
+                    )}
+
+                    {response.error && (
+                        <p className="mt-2 text-lg font-bold bg-red-500 rounded-full px-2 py-1">
+                            {response.error}
+                        </p>
+                    )}
+                    <div className="flex flex-col w-full items-center justify-center text-xl font-heading">
+                        {(!processing && response.status !== 404) && (
+                            <AnimatePresence mode="sync">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 20 }}
+                                    whileHover={{ scale: 1.05 }}
+                                    transition={{
+                                        duration: 0.3,
+                                        ease: "easeInOut",
+                                    }}
+                                > <button
+                                    onClick={runProcessing}
+                                    disabled={!isValidEmail || processing}
+                                    className="min-w-sm tracking-widest bg-secondary text-white px-8 mt-10 py-1.5 rounded-full enabled:transition-all enabled:duration-200 disabled:bg-secondary/40 disabled:opacity-50 disabled:cursor-not-allowed enabled:hover:scale-105">
+                                        Login
+                                    </button>
+                                </motion.div>
+                            </AnimatePresence>
+                        )}
+
+                        {(response.status === 404) &&
+                            (
+                                <AnimatePresence mode="sync">
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 20 }}
+                                        whileHover={{ scale: 1.05 }}
+                                        transition={{
+                                            duration: 0.3,
+                                            ease: "easeInOut",
+                                        }}
+                                    >
+                                        <Link
+                                            to={AppRoutes.signup}
+                                            className="flex items-center justify-center min-w-sm max-w-md tracking-widest bg-secondary text-white px-8 mt-10 py-1.5 rounded-full"
+                                        >
+                                            Sign Up
+                                        </Link>
+                                    </motion.div>
+                                </AnimatePresence>
+                            )
+                        }
+
+                        {(processing) && <Loader />}
+                    </div>
+                </div>
+            </div>
         </>
-    )
+    );
+}
+
+
+function PasskeyPhone() {
+    return (
+        <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><g fill="var(--accent)" transform="matrix(.90861 0 0 .90861 104.81 23.397)"><path d="m277.67 0h-214c-18.637 0-33.801 15.164-33.801 33.801v17.399h281.6v-17.399c.001-18.637-15.163-33.801-33.8-33.801zm-136.87 42.667h-8.533c-4.71 0-8.533-3.823-8.533-8.533s3.823-8.533 8.533-8.533h8.533c4.71 0 8.533 3.823 8.533 8.533s-3.823 8.533-8.533 8.533zm68.267 0h-42.667c-4.71 0-8.533-3.823-8.533-8.533s3.823-8.533 8.533-8.533h42.667c4.71 0 8.533 3.823 8.533 8.533s-3.823 8.533-8.533 8.533z" /><path d="m29.866 68.269v8.5338c-4.71 0-8.5338 3.8135-8.5338 8.5325v8.5325c0 4.71 3.8238 8.5338 8.5338 8.5338v8.5325c-4.71 0-8.5338 3.8148-8.5338 8.5338v8.5325c0 4.71 3.8238 8.5325 8.5338 8.5325v8.5338c-4.71 0-8.5338 3.8135-8.5338 8.5325v8.5338c0 4.71 3.8238 8.5325 8.5338 8.5325v247.47h281.6v-349.86zm149.37 39.618c3.5636.33209 7.2006 2.7101 8.7238 5.705.96149 1.8907 2.7723 11.756 8.7388 47.611 6.8193 40.98 7.459 45.385 6.8225 46.921-1.2843 3.1004-5.408 4.5794-8.435 3.0238-2.8546-1.467-3.0024-2.0626-8.0238-32.25-3.3956-20.414-5.1394-29.613-5.9188-31.23-.65971-1.3684-1.9683-2.864-3.2488-3.7112-3.6134-2.3913-6.7017-2.2237-31.975 1.7325-18.332 2.8696-22.802 3.7354-25.116 4.8625-3.3388 1.6265-5.4232 4.4308-5.8038 7.8075-.17344 1.5381 1.9124 15.37 6.2288 41.294 3.5697 21.439 6.5719 39.069 6.6712 39.176.0994.10657 17.217-2.4628 38.039-5.7112s38.858-5.9051 40.08-5.9038c3.8721 0 7.1922 2.0049 8.9675 5.4025.40724.77959 5.2909 28.711 10.852 62.071 10.034 60.184 10.106 60.676 9.3212 63.374-.87539 3.0114-3.3323 5.9063-5.9438 7.0038-2.1686.9116-82.971 13.488-86.461 13.458-1.5439-.0197-3.4668-.44101-4.545-1.0112-2.4506-1.2962-4.7481-3.6092-5.61-5.6475-.38099-.90095-5.2595-28.777-10.842-61.946-11.217-66.642-10.773-62.618-7.3525-66.514.96156-1.0953 1.4991-2.1851 1.315-2.665-.7194-1.8747-18.385-108.99-18.385-111.48 0-4.6653 3.3198-8.6817 8.4962-10.279 3.9039-1.2044 70.891-11.33 73.405-11.096zm-29.559 16.946c-.97073-.00007-2.4774.2084-5.2562.6275-5.0944.75947-6.1046 1.0776-7.13 2.24-1.5285 1.7328-1.5054 2.6258.10875 4.24 1.5413 1.5412 1.0423 1.5098 7.8488.4875v-.01c6.5236-.97987 7.8388-1.6893 7.8388-4.2288 0-1.3838-.33473-2.0537-1.365-2.7288-.63921-.4188-1.0743-.62743-2.045-.6275zm20.382 141.75c-5.6055.017-11.211 2.8318-14.14 8.8175-1.7036 3.482-1.9425 8.6242-.55375 11.915 1.0208 2.4191 4.6353 6.4048 7.2112 7.9525 1.0597.63674 1.9976 1.2064 2.0838 1.2662.11603.0809 3.2513 17.905 3.2875 18.69.0138.29597 2.1585.0627 7.8375-.85125 3.2848-.52861 6.0836-1.0724 6.22-1.2088.13634-.13615-.4393-4.2995-1.28-9.25l-1.5288-9 2.3575-2.045c4.005-3.4732 5.4218-7.7209 4.4275-13.274-1.5098-8.432-8.7155-13.034-15.922-13.012zm26.026 89.128c-3.592 0-26.25 3.7555-27.468 4.5525-2.4318 1.5922-.96285 6.0921 1.9775 6.0588.44609 0 6.725-.92411 13.954-2.0425 13.997-2.1657 15.264-2.6055 15.264-5.29 0-2.0063-1.4458-3.2788-3.7275-3.2788z" /><path d="m29.867 478.2c0 18.637 15.164 33.8 33.801 33.8h214c18.637 0 33.801-15.164 33.801-33.8v-43h-281.6v43zm140.8-34.467c11.785 0 21.333 9.549 21.333 21.333s-9.549 21.333-21.333 21.333-21.333-9.549-21.333-21.333c-.001-11.784 9.548-21.333 21.333-21.333z" /></g></svg>)
 }
