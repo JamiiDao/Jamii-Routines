@@ -1,11 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Header from "../components/header";
 import { AppRoutes } from "../App";
-import { Link } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import Loader from "../components/Loader";
+import getHref from "../components/href";
 
 export default function Login() {
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        localStorage.removeItem("user");
+    }, []);
+
+
     const [email, setEmail] = useState("");
 
     const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -25,12 +32,6 @@ export default function Login() {
         });
     };
 
-
-
-    const href = window.location.href
-    console.log("ORIGIN: ", href);
-
-
     const runProcessing = async () => {
         setProcessing(true);
 
@@ -39,7 +40,7 @@ export default function Login() {
                 email: email || null,
             };
 
-            const response = await fetch(href, {
+            const response = await fetch(getHref(AppRoutes.signup), {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -48,15 +49,38 @@ export default function Login() {
                 body: JSON.stringify(body),
             });
 
-            const parseResponse = await response.json();
 
-            setResponse({
-                status: response.status,
-                error: parseResponse.message,
-            });
+            if (response.status === 200) {
+                const parsedResponse = await response.json();
+
+                if (parsedResponse.email === undefined) {
+                    setResponse({
+                        status: 0,
+                        error: "Email is missing"
+                    });
+
+                    return;
+                }
+
+                localStorage.setItem("user", parsedResponse.email);
+
+                navigate("/verify-code");
+            }
+
+            else {
+                const parseResponse = await response.json();
+
+                setResponse({
+                    status: response.status,
+                    error: parseResponse.message,
+                });
+            }
 
         } catch (err) {
-            console.error(err);
+            setResponse({
+                status: 0,
+                error: err instanceof Error ? err.message : String(err),
+            });
         }
 
         setProcessing(false);
@@ -117,9 +141,9 @@ export default function Login() {
                     )}
 
                     {response.error && (
-                        <p className="mt-2 text-lg font-bold bg-red-500 rounded-full px-2 py-1">
-                            {response.error}
-                        </p>
+                        <div className="mt-2 flex tex-wrap text-lg font-bold bg-red-500 rounded-xl p-2">
+                            <p className="p-1">{response.error}</p>
+                        </div>
                     )}
 
                     <div className="flex flex-col w-full items-center justify-center text-xl font-heading">

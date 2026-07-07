@@ -29,33 +29,46 @@ pub use parse_secrets::*;
 
 #[tokio::main]
 async fn main() {
+    use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+
     Secrets::asserts();
 
-    #[cfg(not(debug_assertions))]
     EmailService::init_smtps().await;
 
     let app_db_path = "routines.db";
     let app_db = AppDb::init(app_db_path).await.unwrap();
     app_db.create_tables_if_missing().await.unwrap();
 
+    CookieAuthProcessor::cleanup(app_db.db.clone());
+
     #[cfg(debug_assertions)]
     let cors = CorsLayer::new()
-        .allow_origin([
-            "http://localhost:5173".parse::<HeaderValue>().unwrap(),
-            "http://127.0.0.1:5173".parse::<HeaderValue>().unwrap(),
-        ])
-        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
+        .allow_origin(["http://127.0.0.1:5173".parse::<HeaderValue>().unwrap()])
+        .allow_methods([Method::GET, Method::POST])
         .allow_credentials(true)
         .allow_headers([CONTENT_TYPE]);
     #[cfg(not(debug_assertions))]
     let cors = CorsLayer::new();
 
     let app = Router::new()
-        .route("/", get(root))
-        .route("/login", post(CookieAuthProcessor::process))
-        .route("/signup", post(RouteHandler::process_signup))
-        .route("/resend-code", post(RouteHandler::process_resend_code))
-        .route("/verify-code", post(RouteHandler::verify_code))
+        .route(AppRoutes::Root.as_str(), get(root))
+        .route(AppRoutes::Login.as_str(), post(RouteHandler::process_login))
+        .route(
+            AppRoutes::SignUp.as_str(),
+            post(RouteHandler::process_signup),
+        )
+        .route(
+            AppRoutes::ResendCode.as_str(),
+            post(RouteHandler::process_resend_code),
+        )
+        .route(
+            AppRoutes::VerifyCode.as_str(),
+            post(RouteHandler::verify_code),
+        )
         .with_state(app_db)
         .layer(cors);
 

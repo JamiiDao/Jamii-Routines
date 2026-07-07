@@ -41,12 +41,7 @@ pub struct HttpErrorWrapper(pub ErrorResponseType);
 
 impl HttpErrorWrapper {
     pub fn new() -> Self {
-        Self((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ErrorResponse {
-                message: "Internal server error occurred".to_string(),
-            }),
-        ))
+        Self::default()
     }
 
     pub fn status_code(mut self, status_code: StatusCode) -> Self {
@@ -75,6 +70,17 @@ impl From<RoutinesError> for HttpErrorWrapper {
         tracing::error!("Randomness: {error:?}");
 
         Self::new()
+    }
+}
+
+impl Default for HttpErrorWrapper {
+    fn default() -> Self {
+        Self((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ErrorResponse {
+                message: "Internal server error occurred".to_string(),
+            }),
+        ))
     }
 }
 

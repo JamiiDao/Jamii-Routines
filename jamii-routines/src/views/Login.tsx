@@ -1,12 +1,14 @@
 import { useState } from "react";
 import Header from "../components/header";
 import { AppRoutes } from "../App";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import getHref from "../components/href";
 import Loader from "../components/Loader";
 
 export default function Login() {
+    const navigate = useNavigate();
+
     const [email, setEmail] = useState("");
 
     const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -26,7 +28,7 @@ export default function Login() {
         });
     };
 
-    let href = getHref("login");
+    let href = getHref(AppRoutes.login);
 
     const runProcessing = async () => {
         setProcessing(true);
@@ -45,19 +47,25 @@ export default function Login() {
                 body: JSON.stringify(body),
             });
 
-            const parseResponse = await response.json();
+            if (response.status === 303) {
+                localStorage.setItem('user', email);
 
-            console.log(response.status);
-            console.log(response.redirected);
-            console.log(response.url);
+                navigate(AppRoutes.verify);
+            } else {
+                const parseResponse = await response.json();
 
-            setResponse({
-                status: response.status,
-                error: parseResponse.message,
-            });
+                setResponse({
+                    status: response.status,
+                    error: parseResponse.message,
+                });
+            }
+
 
         } catch (err) {
-            console.error(err);
+            setResponse({
+                status: 0,
+                error: err instanceof Error ? err.message : String(err),
+            });
         }
 
         setProcessing(false);

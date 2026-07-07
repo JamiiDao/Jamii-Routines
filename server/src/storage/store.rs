@@ -37,17 +37,16 @@ impl AppDb {
                     name TEXT PRIMARY KEY,
                     passkey BLOB,
                     create_time TEXT NOT NULL,
-
+                    email_verified INTEGER NOT NULL DEFAULT 0,
+                    
                     email_auth_code TEXT,
-                    email_auth_time BLOB,
-                    email_auth_expiry BLOB
+                    email_auth_time BLOB
                 );
 
                 CREATE TABLE IF NOT EXISTS sessions (
                     token TEXT PRIMARY KEY,
                     user_name TEXT NOT NULL,
-                    created_at TEXT NOT NULL,
-                    expires_at TEXT NOT NULL,
+                    created_at BLOB NOT NULL,
 
                     FOREIGN KEY(user_name) REFERENCES users(name) ON DELETE CASCADE
                 );

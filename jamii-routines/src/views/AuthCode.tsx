@@ -1,35 +1,133 @@
 import { useMemo, useRef, useState, useEffect } from "react";
 import Header from "../components/header";
 import Loader from "../components/Loader";
+import getHref from "../components/href";
+import { AppRoutes } from "../App";
+import { useNavigate } from "react-router-dom";
 
-export default function About() {
-    const [timerInfo, setTimer] = useState({
-        timer: 60,
-        resending: false,
+type LoadingState = {
+    state: boolean;
+    user: string | null;
+    error: string;
+};
+
+export default function Verify() {
+    const [initialLoading, setInitialLoading] = useState<LoadingState>({
+        state: true,
+        user: null,
+        error: ""
     });
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            setTimer((current) => {
-                if (current.timer <= 0) {
-                    clearInterval(interval);
-                    return {
-                        ...current,
-                        timer: 0
-                    }
+        const user = localStorage.getItem('user');
+        setInitialLoading((previous) => ({
+            ...previous,
+            user: user,
+        }));
+
+        const sendResendCode = async () => {
+            try {
+                if (user === null) {
+                    setInitialLoading((previous) => ({
+                        state: false,
+                        user: previous.user,
+                        error: "User not found",
+                    }));
                 }
+                else {
+                    await fetch(getHref(AppRoutes.resend), {
+                        method: "POST",
+                        credentials: "include",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            email: user,
+                        } as { email: string }),
+                    });
+                }
+            } catch (err) {
+                setInitialLoading((previous) => ({
+                    state: false,
+                    user: previous.user,
+                    error: err instanceof Error ? err.message : String(err),
+                }));
+            } finally {
+                setInitialLoading({
+                    state: false,
+                    user: user,
+                    error: ""
+                });
 
-                return {
-                    ...current,
-                    timer: current.timer - 1,
-                };
-            });
-        }, 1000);
+            }
+        };
 
-        return () => clearInterval(interval);
+        sendResendCode();
     }, []);
 
-    const [processing, setProcessing] = useState(false);
+    return (
+        <div className="flex flex-col min-h-screen w-full px-4">
+            <Header />
+
+            <div className="flex flex-col flex-1 items-center justify-center w-full px-4">
+                <div className="w-full items-center max-w-lg rounded-2xl bg-secondary p-10 shadow-xl">
+
+                    <h1 className="text-center text-3xl font-bold font-heading tracking-widest">
+                        Email Authentication
+                    </h1>
+
+                    {initialLoading.state && (
+                        <>
+                            <p className="mt-4 text-center">
+                                Resending the 6-digit verification code to {initialLoading.user} .
+                            </p>
+
+                            <div className="flex flex-col w-full p-6">
+
+                                <Loader />
+                            </div>
+                        </>
+                    )}
+
+                    {(!initialLoading.state && initialLoading.error !== "") && (
+                        <>
+                            <p className="mt-4 text-center p-6 rounded-lg bg-red-700 text-white">
+                                {initialLoading.error}
+                            </p>
+
+                            <div className="flex flex-col w-full p-6">
+
+                                <Loader />
+                            </div>
+                        </>
+                    )}
+
+                    {
+                        (!initialLoading.state) && (
+                            <CodeInput />
+                        )
+                    }
+                </div>
+            </div >
+        </div >
+    );
+}
+
+function CodeInput() {
+    const navigator = useNavigate();
+
+    const [verifyState, setVerifyState] = useState<LoadingState>({
+        state: false,
+        user: localStorage.getItem('user'),
+        error: ""
+    });
+
+    const [verifyResponseState, setVerifyResponseState] = useState({
+        state: false,
+        error: ""
+    });
+
+
 
     const [code, setCode] = useState(Array(6).fill(""));
     const inputs = useRef<(HTMLInputElement | null)[]>([]);
@@ -40,13 +138,16 @@ export default function About() {
     );
 
     function updateValue(index: number, value: string) {
-        const digit = value.replace(/\D/g, "").slice(-1);
+        const character = value
+            .replace(/[^a-zA-Z0-9]/g, "")
+            .slice(-1)
+            .toUpperCase();
 
         const next = [...code];
-        next[index] = digit;
+        next[index] = character;
         setCode(next);
 
-        if (digit && index < 5) {
+        if (character && index < 5) {
             inputs.current[index + 1]?.focus();
         }
     }
@@ -55,6 +156,11 @@ export default function About() {
         index: number,
         event: React.KeyboardEvent<HTMLInputElement>
     ) {
+        setVerifyResponseState({
+            state: false,
+            error: "",
+        });
+
         if (event.key === "Backspace") {
             if (code[index]) {
                 const next = [...code];
@@ -75,12 +181,16 @@ export default function About() {
     function onPaste(event: React.ClipboardEvent<HTMLInputElement>) {
         event.preventDefault();
 
+        setVerifyResponseState({
+            state: false,
+            error: "",
+        });
+
         const pasted = event.clipboardData
-            .getData("text")
-            .replace(/\D/g, "")
+            .getData("text").toUpperCase()
+            .replace(/[^a-zA-Z0-9]/g, "")
             .slice(0, 6)
             .split("");
-
         const next = Array(6).fill("");
 
         pasted.forEach((c, i) => {
@@ -93,76 +203,159 @@ export default function About() {
         inputs.current[focus]?.focus();
     }
 
+    const [timerInfo, setTimer] = useState(60);
+
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setTimer((current) => {
+                if (current === 0) {
+                    return 0;
+                }
+
+                return current - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, []);
+
+    const handleResend = async () => {
+        setVerifyState((current) => ({
+            state: true,
+            user: current.user,
+            error: current.error,
+        }));
+
+        setVerifyResponseState({
+            state: false,
+            error: "",
+        });
+
+        try {
+            await fetch(getHref(AppRoutes.resend), {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email: verifyState.user,
+                }),
+            });
+
+        } catch (err) {
+            setVerifyState((current) => ({
+                state: false,
+                user: current.user,
+                error: err instanceof Error ? err.message : String(err),
+            }));
+        } finally {
+            setVerifyState((current) => ({
+                state: false,
+                user: current.user,
+                error: ""
+            }));
+
+            setTimer(60)
+        }
+    };
+
     async function onSubmit(event: React.SubmitEvent) {
         event.preventDefault();
 
-        setProcessing(true)
+        setVerifyState((current) => ({
+            state: false,
+            user: current.user,
+            error: "",
+        }));
+
+        setVerifyResponseState((current) => ({
+            ...current,
+            state: true,
+        }));
 
         const verificationCode = code.join("");
 
-        console.log(verificationCode);
+        const response = await fetch(getHref(AppRoutes.verify), {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                email: verifyState.user,
+                code: verificationCode,
+            }),
+        });
 
-        // await fetch("/verify", {
-        //     method: "POST",
-        //     headers: {
-        //         "Content-Type": "application/json",
-        //     },
-        //     body: JSON.stringify({
-        //         code: verificationCode,
-        //     }),
-        // });
+        if (response.status === 200) {
+            try {
+                const parsedJson = await response.json();
+
+                navigator(parsedJson.path)
+
+            } catch (err) {
+                setVerifyResponseState({
+                    state: false,
+                    error: err instanceof Error ? err.message : String(err)
+                });
+            }
+        }
+
+        try {
+            const parsedJson = await response.json();
+
+            setVerifyResponseState({
+                state: false,
+                error: parsedJson.message
+            });
+        } catch (err) {
+            setVerifyResponseState({
+                state: false,
+                error: err instanceof Error ? err.message : String(err)
+            });
+        }
+
+        setVerifyState((current) => ({
+            state: false,
+            user: current.user,
+            error: "",
+        }));
+
     }
 
-    const handleResend = async () => {
-        setProcessing(true)
-        setTimer((current) => {
-            return {
-                resending: true,
-                timer: current.timer,
-            };
-        });
-    };
-
     return (
-        <div className="flex flex-col min-h-screen w-full  px-4">
-            <Header />
+        <>
+            <p className="mt-4 text-center">
+                Enter the 6-digit verification code sent to your email to prove that you control this email address.
+            </p>
 
-            <div className="flex flex-col flex-1 items-center justify-center w-full  px-4">
-                <div className="w-full items-center max-w-lg rounded-2xl bg-secondary p-10 shadow-xl">
-
-                    <h1 className="text-center text-3xl font-bold font-heading tracking-widest">
-                        Email Authentication
-                    </h1>
-
-                    <p className="mt-4 text-center">
-                        Enter the 6-digit verification code sent to your email to prove that you control this email address.
-                    </p>
-
-                    <form
-                        onSubmit={onSubmit}
-                        className="mt-8"
-                    >
-                        <div className="flex justify-between gap-3">
-                            {code.map((value, index) => (
-                                <input
-                                    disabled={processing}
-                                    key={index}
-                                    ref={(element) => {
-                                        inputs.current[index] = element;
-                                    }}
-                                    type="text"
-                                    inputMode="numeric"
-                                    maxLength={1}
-                                    value={value}
-                                    autoFocus={index === 0}
-                                    onPaste={onPaste}
-                                    onChange={(e) =>
-                                        updateValue(index, e.target.value)
-                                    }
-                                    onKeyDown={(e) =>
-                                        onKeyDown(index, e)
-                                    }
-                                    className="
+            <form
+                onSubmit={onSubmit}
+                className="mt-8"
+            >
+                <div className="flex justify-between gap-3">
+                    {code.map((value, index) => (
+                        <input
+                            disabled={verifyState.state || verifyResponseState.state}
+                            key={index}
+                            ref={(element) => {
+                                inputs.current[index] = element;
+                            }}
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={1}
+                            value={value}
+                            autoFocus={index === 0}
+                            onPaste={onPaste}
+                            onChange={(e) =>
+                                updateValue(index, e.target.value)
+                            }
+                            onKeyDown={(e) =>
+                                onKeyDown(index, e)
+                            }
+                            className="
                                     h-16
                                     w-14
                                     rounded-xl
@@ -176,33 +369,53 @@ export default function About() {
                                     focus:border-black
                                     font-monospace
                                 "
-                                />
-                            ))}
-                        </div>
+                        />
+                    ))}
+                </div>
 
-                        {!processing && (
-                            <>
-                                {(timerInfo.timer !== 0 && !timerInfo.resending) && (
-                                    <div className="flex text-xl mt-10 text-white">Resend in {timerInfo.timer} seconds...</div>
-                                )}
+                {!verifyState.state && (
+                    <>
+                        {
+                            (timerInfo !== 0 && !verifyState.state && !verifyResponseState.state) && (
+                                <div className="flex text-xl mt-10 text-white">Resend in {timerInfo} seconds...</div>
+                            )
+                        }
 
-                                {(timerInfo.timer === 0 && !timerInfo.resending) && (
-                                    <button onClick={handleResend} type="button" className="flex text-xl mt-10 text-white underline p-2 cursor-pointer">Resend to todo from store</button>
-                                )}
-                            </>
+                        {(timerInfo === 0 && !verifyState.state && !verifyResponseState.state) && (
+                            <button
+                                onClick={handleResend}
+                                type="button" className="flex text-xl mt-10 text-white underline p-2 cursor-pointer">Resend code</button>
                         )}
+                    </>
+                )}
+
+                {(timerInfo === 0 && verifyState.state) && (
+                    <>
+                        <div className="flex text-xl mt-10 text-white p-2 cursor-pointer">Resending...</div>
+                        <Loader />
+                    </>
+                )}
 
 
 
-                        {(timerInfo.timer === 0 && timerInfo.resending) && (
-                            <div className="flex text-xl mt-10 text-white p-2 cursor-pointer">Resending to todo from store</div>
-                        )}
+                {(verifyState.error !== "") && (
+                    <div className="flex text-xl mt-10 text-white p-2 bg-red-700">
+                        {verifyState.error}.
+                    </div>
+                )}
 
-                        {(!processing) &&
-                            (<button
-                                type="submit"
-                                disabled={!complete}
-                                className="
+
+                {(verifyResponseState.error !== "") && (
+                    <div className="flex text-xl mt-10 text-white p-2 bg-red-700">
+                        {verifyResponseState.error}.
+                    </div>
+                )}
+
+                {(!verifyState.state && verifyState.error === "" && !verifyResponseState.state && verifyResponseState.error === "") &&
+                    (<button
+                        type="submit"
+                        disabled={!complete}
+                        className="
                                 mt-8
                                 w-full
                                 rounded-full
@@ -221,21 +434,19 @@ export default function About() {
                                 disabled:bg-complement/10
                                 disabled:text-white/10
                             ">
-                                Verify
-                            </button>
-                            )
-                        }
+                        Verify
+                    </button>
+                    )
+                }
 
-                        {(processing && !timerInfo.resending) &&
-                            (<div className="mt-10 text-xl">Verifying...</div>)}
-
-                        {(processing) && (
-                            <Loader />
-                        )}
-
-                    </form>
-                </div>
-            </div>
-        </div>
+                {(verifyResponseState.state) && (
+                    <>
+                        <p className="mt-10 text-xl">Verifying code...</p>
+                        <Loader />
+                    </>
+                )}
+            </form>
+        </>
     );
+
 }

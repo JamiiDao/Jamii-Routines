@@ -19,8 +19,7 @@ impl RouteHandler {
                 SELECT
                     name,
                     email_auth_code,
-                    email_auth_time,
-                    email_auth_expiry
+                    email_auth_time
                 FROM users
                 WHERE name = ?
             "#,
@@ -46,15 +45,14 @@ impl RouteHandler {
             })
             .or(Err(HttpErrorWrapper::new()))?;
 
-        if (email_auth_time + Duration::from_secs(60)) < Tai64N::now() {
-            Self::send_auth(true, &credentials.email, &state.db).await?;
-
-            Ok(StatusCode::OK)
-        } else {
-            Err(HttpErrorWrapper::new()
+        if Tai64N::now() < email_auth_time + Duration::from_secs(60) {
+            return Err(HttpErrorWrapper::new()
                 .status_code(StatusCode::BAD_REQUEST)
-                .message("Wait at least 30 seconds"))
+                .message("Wait at least 60 seconds"));
         }
+
+        Self::send_auth(true, &credentials.email, &state.db).await?;
+        Ok(StatusCode::OK)
     }
 
     pub(crate) async fn send_auth(
@@ -101,16 +99,14 @@ impl RouteHandler {
                     passkey,
                     create_time,
                     email_auth_code,
-                    email_auth_time,
-                    email_auth_expiry
+                    email_auth_time
                 )
                 VALUES (
                     ?,
                     NULL,
                     datetime('now'),
                     ?,
-                    ?,
-                    NULL
+                    ?
                 )
                 "#,
             )
@@ -151,16 +147,16 @@ impl RouteHandler {
 
                 <!-- Header -->
                 <tr>
-                    <td align="center" style="padding:40px 32px 24px;background:#3636c9;">
-                        <h1 style="margin:0;font-size:28px;font-weight:700;color:#ffffff;">
-                            Verify Code
+                    <td align="center" style="padding:20px 13px 24px;background:#3636c9;">
+                        <h1 style="margin:0;font-size:20px;font-weight:700;color:#ffffff;">
+                            Verification Code
                         </h1>
                     </td>
                 </tr>
 
                 <!-- Body -->
                 <tr>
-                    <td style="padding:40px 32px;">
+                    <td style="padding:20px 12px;">
 
                         <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">
                             Hello,
@@ -180,14 +176,14 @@ impl RouteHandler {
                                         background:#f9fafb;
                                         border:2px dashed #d1d5db;
                                         border-radius:14px;
-                                        padding:22px 36px;
-                                        font-size:40px;
+                                        padding:10px 20px;
+                                        font-size:18px;
                                         font-weight:700;
-                                        letter-spacing:12px;
+                                        letter-spacing:6px;
                                         color:#111827;
                                         font-family:'Courier New',monospace;
                                     ">
-                                         {code},
+                                         {code}
                                     </div>
                                 </td>
                             </tr>

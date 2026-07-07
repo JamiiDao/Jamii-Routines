@@ -1,33 +1,32 @@
-use std::sync::LazyLock;
+use std::sync::OnceLock;
 
 use mail_list::{EmailEnvelopeDetails, Smtps, SmtpsBuilder};
 
+pub(crate) static MAILER: OnceLock<Smtps> = OnceLock::new();
+
 use crate::SECRETS;
 
-pub(crate) static MAILER: LazyLock<Smtps> = LazyLock::new(|| {
-    let runtime = tokio::runtime::Runtime::new().unwrap();
+pub struct EmailService;
 
-    runtime.block_on(async move {
+impl EmailService {
+    pub async fn init_smtps() {
         let mut mailer = SmtpsBuilder::new();
         mailer
             .set_from("Support <support@jamiidao.app>")
             .set_hello_name("jamiidao.app")
             .set_reply_to("Support <support@jamiidao.app>");
 
-        mailer.build(SECRETS.smtps()).unwrap()
-    })
-});
+        let mailer = mailer.build(SECRETS.smtps()).unwrap();
 
-pub struct EmailService;
+        #[cfg(not(debug_assertions))]
+        mailer.test_connection().await.unwrap();
 
-impl EmailService {
-    pub async fn init_smtps() {
-        MAILER.test_connection().await.unwrap();
+        MAILER.set(mailer).unwrap();
     }
 
     pub fn send_auth(envelope: EmailEnvelopeDetails) {
         tokio::spawn(async move {
-            if let Err(error) = MAILER.send(&envelope).await {
+            if let Err(error) = MAILER.get().unwrap().send(&envelope).await {
                 tracing::error!("MAILER: {error:?}");
             }
         });

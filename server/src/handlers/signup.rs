@@ -7,7 +7,7 @@ impl RouteHandler {
     pub async fn process_signup(
         State(state): State<AppDb>,
         credentials: Json<SignupData>,
-    ) -> Result<StatusCode, HttpErrorWrapper> {
+    ) -> Result<(StatusCode, Json<SignUpResponse>), HttpErrorWrapper> {
         let exists: bool = sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM users WHERE name = ?)")
             .bind(credentials.email.as_str())
             .fetch_one(&state.db)
@@ -23,11 +23,21 @@ impl RouteHandler {
             Self::send_auth(false, credentials.email.as_str(), &state.db).await?;
         }
 
-        Ok(StatusCode::OK)
+        Ok((
+            StatusCode::OK,
+            Json(SignUpResponse {
+                email: credentials.email.clone(),
+            }),
+        ))
     }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SignupData {
+    pub email: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SignUpResponse {
     pub email: String,
 }

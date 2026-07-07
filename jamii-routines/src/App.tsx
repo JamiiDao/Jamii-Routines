@@ -1,5 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import { Home, About, Login, SignUp } from "./views";
+import Verify from "./views/AuthCode";
+import Dashboard from "./views/Dashboard/root";
 
 
 export default function App() {
@@ -12,6 +14,8 @@ export default function App() {
           <Route path={AppRoutes.about} element={<About />} />
           <Route path={AppRoutes.login} element={<Login />} />
           <Route path={AppRoutes.signup} element={<SignUp />} />
+          <Route path={AppRoutes.verify} element={<Verify />} />
+          <Route path={AppRoutes.dashboard} element={<Dashboard />} />
         </Routes>
       </main>
     </div>);
@@ -23,4 +27,7 @@ export const AppRoutes = {
   about: "/about",
   login: "/login",
   signup: "/signup",
+  verify: "/verify-code",
+  resend: "/resend-code",
+  dashboard: "/dashboard"
 } as const;
