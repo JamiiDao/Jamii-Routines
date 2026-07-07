@@ -1,6 +1,6 @@
-import Header from "../components/header";
+import Header from "../../components/header";
 
-export default function About() {
+export default function Dashboard() {
 
 
     return (
@@ -8,7 +8,7 @@ export default function About() {
             <Header />
 
             <div className="flex flex-col flex-1 items-center justify-center w-full  px-4">
-                About us
+                DASHBOARD
             </div>
         </div>
     );

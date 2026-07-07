@@ -1,19 +1,10 @@
 import { Route, Routes } from "react-router-dom";
 import { Home, About, Login, SignUp } from "./views";
-import { useEffect } from "react";
+import Verify from "./views/AuthCode";
+import Dashboard from "./views/Dashboard/root";
 
 
 export default function App() {
-
-  useEffect(() => {
-    const run = async () => {
-      const res = await fetch("http://127.0.0.1:3000/");
-      const text = await res.text();
-      console.log("RES TEXT:", text);
-    };
-
-    run();
-  }, []);
 
   return (
     <div className="relative min-h-screen w-full overflow-x-clip font-normal">
@@ -23,6 +14,8 @@ export default function App() {
           <Route path={AppRoutes.about} element={<About />} />
           <Route path={AppRoutes.login} element={<Login />} />
           <Route path={AppRoutes.signup} element={<SignUp />} />
+          <Route path={AppRoutes.verify} element={<Verify />} />
+          <Route path={AppRoutes.dashboard} element={<Dashboard />} />
         </Routes>
       </main>
     </div>);
@@ -34,8 +27,7 @@ export const AppRoutes = {
   about: "/about",
   login: "/login",
   signup: "/signup",
+  verify: "/verify-code",
+  resend: "/resend-code",
+  dashboard: "/dashboard"
 } as const;
-
-function useState(arg0: string): [any, any] {
-  throw new Error("Function not implemented.");
-}
