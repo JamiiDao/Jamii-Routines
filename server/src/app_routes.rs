@@ -2,11 +2,15 @@
 pub enum AppRoutes {
     Root,
     Login,
+    Logout,
     SignUp,
     About,
     Dashboard,
     VerifyCode,
     ResendCode,
+    RegisterPasskeyChallenge,
+    RegisterPasskey,
+    VerifyPasskey,
 }
 
 impl AppRoutes {
@@ -14,11 +18,15 @@ impl AppRoutes {
         match self {
             Self::Root => "/",
             Self::Login => "/login",
+            Self::Logout => "/logout",
             Self::SignUp => "/signup",
             Self::About => "/about",
             Self::Dashboard => "/dashboard",
             Self::VerifyCode => "/verify-code",
             Self::ResendCode => "/resend-code",
+            Self::RegisterPasskeyChallenge => "/passkey-challenge",
+            Self::RegisterPasskey => "/register-passkey",
+            Self::VerifyPasskey => "/verify-passkey",
         }
     }
 }

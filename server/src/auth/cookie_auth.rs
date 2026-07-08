@@ -17,9 +17,8 @@ pub struct CookieAuthProcessor;
 impl CookieAuthProcessor {
     pub async fn check_cookies(
         db: &Pool<Sqlite>,
-        jar: CookieJar,
-        email: &str,
-    ) -> Result<(StatusCode, CookieJar), HttpErrorWrapper> {
+        jar: &CookieJar,
+    ) -> Result<(StatusCode, String, String), HttpErrorWrapper> {
         let cookie_exists = jar
             .get("session")
             .ok_or_else(|| {
@@ -44,20 +43,12 @@ impl CookieAuthProcessor {
         .fetch_optional(db)
         .await?
         .ok_or_else(|| {
-            dbg!("COOKIE FOUND IN HEADER BUT NOT FOUND IN STORE");
-
             HttpErrorWrapper::new()
                 .status_code(StatusCode::UNAUTHORIZED)
                 .message("expired session. New login required!")
         })?;
 
         let user_name = row.try_get::<String, _>("user_name")?;
-
-        if user_name != email {
-            return Err(HttpErrorWrapper::new()
-                .status_code(StatusCode::UNAUTHORIZED)
-                .message("expired session. New login required!"));
-        }
 
         let created_at: [u8; 12] = row
             .try_get::<Vec<u8>, _>("created_at")?
@@ -77,8 +68,6 @@ impl CookieAuthProcessor {
             .or(Err(HttpErrorWrapper::new()))?;
 
         if Tai64N::now() >= created_at + Duration::from_hours(24) {
-            let new_jar = jar.remove(Cookie::from("session"));
-
             sqlx::query(
                 r#"
                 DELETE FROM sessions
@@ -89,10 +78,12 @@ impl CookieAuthProcessor {
             .execute(db)
             .await?;
 
-            return Ok((StatusCode::UNAUTHORIZED, new_jar));
+            return Err(HttpErrorWrapper::new()
+                .status_code(StatusCode::UNAUTHORIZED)
+                .message("Login required!"));
         }
 
-        Ok((StatusCode::OK, jar))
+        Ok((StatusCode::OK, user_name, cookie_value.to_string()))
     }
 
     pub async fn set_login_headers(

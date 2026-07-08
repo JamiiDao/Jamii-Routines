@@ -1,8 +1,7 @@
 import { useMemo, useRef, useState, useEffect } from "react";
 import Header from "../components/header";
 import Loader from "../components/Loader";
-import getHref from "../components/href";
-import { AppRoutes } from "../App";
+import { AppRoutes, AppServerRoutes } from "../App";
 import { useNavigate } from "react-router-dom";
 
 type LoadingState = {
@@ -35,7 +34,7 @@ export default function Verify() {
                     }));
                 }
                 else {
-                    await fetch(getHref(AppRoutes.resend), {
+                    await fetch(AppServerRoutes.resend, {
                         method: "POST",
                         credentials: "include",
                         headers: {
@@ -233,7 +232,7 @@ function CodeInput() {
         });
 
         try {
-            await fetch(getHref(AppRoutes.resend), {
+            await fetch(AppServerRoutes.resend, {
                 method: "POST",
                 credentials: "include",
                 headers: {
@@ -277,7 +276,7 @@ function CodeInput() {
 
         const verificationCode = code.join("");
 
-        const response = await fetch(getHref(AppRoutes.verify), {
+        const response = await fetch(AppServerRoutes.verify, {
             method: "POST",
             credentials: "include",
             headers: {

@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import Header from "../components/header";
-import { AppRoutes } from "../App";
+import { AppRoutes, AppServerRoutes } from "../App";
 import { useNavigate } from "react-router-dom";
 import Loader from "../components/Loader";
-import getHref from "../components/href";
 
 export default function Login() {
     const navigate = useNavigate();
@@ -40,7 +39,7 @@ export default function Login() {
                 email: email || null,
             };
 
-            const response = await fetch(getHref(AppRoutes.signup), {
+            const response = await fetch(AppServerRoutes.signup, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

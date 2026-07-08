@@ -1,9 +1,8 @@
 import { useState } from "react";
 import Header from "../components/header";
-import { AppRoutes } from "../App";
+import { AppRoutes, AppServerRoutes } from "../App";
 import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import getHref from "../components/href";
 import Loader from "../components/Loader";
 
 export default function Login() {
@@ -28,7 +27,6 @@ export default function Login() {
         });
     };
 
-    let href = getHref(AppRoutes.login);
 
     const runProcessing = async () => {
         setProcessing(true);
@@ -38,7 +36,7 @@ export default function Login() {
                 email: email || null,
             };
 
-            const response = await fetch(href, {
+            const response = await fetch(AppServerRoutes.login, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

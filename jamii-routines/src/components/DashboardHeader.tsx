@@ -4,8 +4,8 @@ import { Link } from "react-router-dom";
 import Logo from "./logo";
 import { AppRoutes } from "../App";
 
+export default function DashboardHeader() {
 
-export default function Header() {
     const [isHidden, setIsHidden] = useState(true);
 
     const handleClick = () => {
@@ -26,10 +26,9 @@ export default function Header() {
                 </Link>
 
                 <nav className="hidden items-center space-x-8 md:flex opacity-100">
-                    <Link to={AppRoutes.home} className="hover:text-secondary">Home</Link>
-                    <Link to={AppRoutes.about} className="hover:text-secondary">About</Link>
-                    <Link to={AppRoutes.login} className="hover:text-secondary">Login</Link>
-                    <Link to={AppRoutes.signup} className="hover:text-secondary">Sign Up</Link>
+                    <Link to={AppRoutes.txs} className="hover:text-secondary">Transactions</Link>
+                    <Link to={AppRoutes.passkey} className="hover:text-secondary">Passkey</Link>
+                    <Link to={AppRoutes.logout} className="hover:text-secondary">Logout</Link>
                 </nav>
 
                 <button
@@ -56,13 +55,13 @@ export default function Header() {
 
             <div id="mobile-menu" className="">
                 <nav className={`  ${isHidden ? "hidden" : ""} space-y-1 px-4 py-4`}>
-                    <Link to={AppRoutes.home} className="block hover:text-secondary rounded px-3 py-2">Home</Link>
-                    <Link to={AppRoutes.about} className="block hover:text-secondary rounded px-3 py-2">About</Link>
-                    <Link to={AppRoutes.login} className="block hover:text-secondary rounded px-3 py-2">Login</Link>
-                    <Link to={AppRoutes.signup} className="block hover:text-secondary rounded px-3 py-2">Sign Up</Link>
+                    <Link to={AppRoutes.txs} className="hover:text-secondary">Transactions</Link>
+                    <Link to={AppRoutes.passkey} className="hover:text-secondary">Passkey</Link>
+                    <Link to={AppRoutes.logout} className="hover:text-secondary">Logout</Link>
                 </nav>
             </div>
         </header >
     )
 
 }
+
