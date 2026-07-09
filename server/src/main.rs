@@ -81,6 +81,18 @@ async fn main() {
             get(PasskeyHandler::new_passkey),
         )
         .route(
+            AppRoutes::RegisterPasskey.as_str(),
+            post(PasskeyHandler::register_passkey),
+        )
+        .route(
+            AppRoutes::ConnectPasskey.as_str(),
+            get(PasskeyHandler::passkey_connect),
+        )
+        .route(
+            AppRoutes::VerifyPasskey.as_str(),
+            post(PasskeyHandler::passkey_verify),
+        )
+        .route(
             AppRoutes::Dashboard.as_str(),
             get(RouteHandler::dashboard_data),
         );

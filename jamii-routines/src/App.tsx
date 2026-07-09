@@ -36,8 +36,6 @@ export const AppRoutes = {
   logout: "/logout",
 } as const;
 
-
-
 export const AppServerRoutes = {
   login: "/api/login",
   logout: "/api/logout",
@@ -48,5 +46,6 @@ export const AppServerRoutes = {
   assets: "/assets",
   passkeyChallenge: "/api/passkey-challenge",
   registerPasskey: "/api/register-passkey",
+  connectPasskey: "/api/connect-passkey",
   verifyPasskey: "/api/verify-passkey",
 } as const;

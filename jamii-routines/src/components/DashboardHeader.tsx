@@ -54,7 +54,7 @@ export default function DashboardHeader() {
             </div>
 
             <div id="mobile-menu" className="">
-                <nav className={`  ${isHidden ? "hidden" : ""} space-y-1 px-4 py-4`}>
+                <nav className={`  ${isHidden ? "hidden" : ""} flex  flex-col  w-full items-center justify-center gap-8 min-h-screen space-y-1 px-4 py-4`}>
                     <Link to={AppRoutes.txs} className="hover:text-secondary">Transactions</Link>
                     <Link to={AppRoutes.passkey} className="hover:text-secondary">Passkey</Link>
                     <Link to={AppRoutes.logout} className="hover:text-secondary">Logout</Link>

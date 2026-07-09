@@ -32,6 +32,12 @@ impl PasskeyOps {
     ) -> CredentialCreationOptions {
         let challenge: passkey::types::Bytes = random_vec(32).into();
 
+        let user_verification_required = if cfg!(debug_assertions) {
+            UserVerificationRequirement::Discouraged
+        } else {
+            UserVerificationRequirement::Required
+        };
+
         CredentialCreationOptions {
             public_key: PublicKeyCredentialCreationOptions {
                 rp: PublicKeyCredentialRpEntity {
@@ -45,18 +51,18 @@ impl PasskeyOps {
                         ty: PublicKeyCredentialType::PublicKey,
                         alg: coset::iana::Algorithm::ES256,
                     },
-                    PublicKeyCredentialParameters {
-                        ty: PublicKeyCredentialType::PublicKey,
-                        alg: coset::iana::Algorithm::RS256,
-                    },
+                    // PublicKeyCredentialParameters {
+                    //     ty: PublicKeyCredentialType::PublicKey,
+                    //     alg: coset::iana::Algorithm::RS256,
+                    // },
                 ],
-                timeout: Some(1000 * 60 * 2),
+                timeout: Some(1000 * 60 * 5),
                 exclude_credentials: None,
                 authenticator_selection: Some(AuthenticatorSelectionCriteria {
                     authenticator_attachment: Some(AuthenticatorAttachment::CrossPlatform),
                     resident_key: Some(ResidentKeyRequirement::Discouraged),
                     require_resident_key: false,
-                    user_verification: UserVerificationRequirement::Required,
+                    user_verification: user_verification_required,
                 }),
                 hints: None,
                 attestation: AttestationConveyancePreference::Indirect,

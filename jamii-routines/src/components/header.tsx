@@ -55,11 +55,11 @@ export default function Header() {
             </div>
 
             <div id="mobile-menu" className="">
-                <nav className={`  ${isHidden ? "hidden" : ""} space-y-1 px-4 py-4`}>
-                    <Link to={AppRoutes.home} className="block hover:text-secondary rounded px-3 py-2">Home</Link>
-                    <Link to={AppRoutes.about} className="block hover:text-secondary rounded px-3 py-2">About</Link>
-                    <Link to={AppRoutes.login} className="block hover:text-secondary rounded px-3 py-2">Login</Link>
-                    <Link to={AppRoutes.signup} className="block hover:text-secondary rounded px-3 py-2">Sign Up</Link>
+                <nav className={`  ${isHidden ? "hidden" : ""} flex  flex-col  w-full items-center justify-center gap-8 min-h-screen  space-y-1 px-4 py-4`}>
+                    <Link to={AppRoutes.home} className="hover:text-secondary px-3 py-2">Home</Link>
+                    <Link to={AppRoutes.about} className="hover:text-secondary px-3 py-2">About</Link>
+                    <Link to={AppRoutes.login} className="hover:text-secondary px-3 py-2">Login</Link>
+                    <Link to={AppRoutes.signup} className="hover:text-secondary px-3 py-2">Sign Up</Link>
                 </nav>
             </div>
         </header >

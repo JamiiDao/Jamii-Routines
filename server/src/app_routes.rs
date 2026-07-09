@@ -10,6 +10,7 @@ pub enum AppRoutes {
     ResendCode,
     RegisterPasskeyChallenge,
     RegisterPasskey,
+    ConnectPasskey,
     VerifyPasskey,
 }
 
@@ -26,6 +27,7 @@ impl AppRoutes {
             Self::ResendCode => "/resend-code",
             Self::RegisterPasskeyChallenge => "/passkey-challenge",
             Self::RegisterPasskey => "/register-passkey",
+            Self::ConnectPasskey => "/connect-passkey",
             Self::VerifyPasskey => "/verify-passkey",
         }
     }
