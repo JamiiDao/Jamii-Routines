@@ -35,7 +35,7 @@ impl AppDb {
             r#"
                CREATE TABLE IF NOT EXISTS users (
                     name TEXT PRIMARY KEY,
-                    passkey BLOB,
+                    passkey String,
                     create_time TEXT NOT NULL,
                     email_verified INTEGER NOT NULL DEFAULT 0,
                     

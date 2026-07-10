@@ -40,7 +40,7 @@ impl RouteHandler {
 
 #[derive(Debug, Deserialize)]
 pub struct LoginData {
-    email: String,
+    pub email: String,
 }
 
 #[derive(Debug, Serialize)]

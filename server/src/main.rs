@@ -7,7 +7,7 @@ use axum::{
     routing::{get, post},
 };
 
-use tower_http::cors::CorsLayer;
+use tower_http::{cors::CorsLayer, services::ServeDir};
 
 mod app_routes;
 pub use app_routes::*;
@@ -47,16 +47,23 @@ async fn main() {
 
     #[cfg(debug_assertions)]
     let cors = CorsLayer::new()
-        .allow_origin(["http://127.0.0.1:5173".parse::<HeaderValue>().unwrap()])
+        .allow_origin([
+            "http://127.0.0.1:5173".parse::<HeaderValue>().unwrap(),
+            "http://localhost:5173".parse::<HeaderValue>().unwrap(),
+        ])
         .allow_methods([Method::GET, Method::POST])
         .allow_credentials(true)
         .allow_headers([CONTENT_TYPE]);
     #[cfg(not(debug_assertions))]
     let cors = CorsLayer::new();
 
-    let app = Router::new()
+    let api = Router::new()
         .route(AppRoutes::Root.as_str(), get(root))
         .route(AppRoutes::Login.as_str(), post(RouteHandler::process_login))
+        .route(
+            AppRoutes::Logout.as_str(),
+            get(RouteHandler::process_logout),
+        )
         .route(
             AppRoutes::SignUp.as_str(),
             post(RouteHandler::process_signup),
@@ -69,6 +76,31 @@ async fn main() {
             AppRoutes::VerifyCode.as_str(),
             post(RouteHandler::verify_code),
         )
+        .route(
+            AppRoutes::RegisterPasskeyChallenge.as_str(),
+            get(PasskeyHandler::new_passkey),
+        )
+        .route(
+            AppRoutes::RegisterPasskey.as_str(),
+            post(PasskeyHandler::register_passkey),
+        )
+        .route(
+            AppRoutes::ConnectPasskey.as_str(),
+            get(PasskeyHandler::passkey_connect),
+        )
+        .route(
+            AppRoutes::VerifyPasskey.as_str(),
+            post(PasskeyHandler::passkey_verify),
+        )
+        .route(
+            AppRoutes::Dashboard.as_str(),
+            get(RouteHandler::dashboard_data),
+        );
+
+    let app = Router::new()
+        .route("/", get(root))
+        .nest_service("/assets", ServeDir::new("assets"))
+        .nest("/api", api)
         .with_state(app_db)
         .layer(cors);
 

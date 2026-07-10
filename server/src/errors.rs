@@ -35,6 +35,18 @@ impl From<sqlx::Error> for HttpErrorWrapper {
     }
 }
 
+impl From<serde_json::Error> for HttpErrorWrapper {
+    fn from(value: serde_json::Error) -> Self {
+        tracing::error!("serde error: {value:?}");
+
+        Self((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ErrorResponse {
+                message: "Internal Server Error".to_string(),
+            }),
+        ))
+    }
+}
 pub type ErrorResponseType = (StatusCode, Json<ErrorResponse>);
 
 pub struct HttpErrorWrapper(pub ErrorResponseType);

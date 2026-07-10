@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import { Home, About, Login, SignUp } from "./views";
 import Verify from "./views/AuthCode";
 import Dashboard from "./views/Dashboard/root";
+import Logout from "./views/Logout";
 
 
 export default function App() {
@@ -16,6 +17,7 @@ export default function App() {
           <Route path={AppRoutes.signup} element={<SignUp />} />
           <Route path={AppRoutes.verify} element={<Verify />} />
           <Route path={AppRoutes.dashboard} element={<Dashboard />} />
+          <Route path={AppRoutes.logout} element={<Logout />} />
         </Routes>
       </main>
     </div>);
@@ -28,6 +30,22 @@ export const AppRoutes = {
   login: "/login",
   signup: "/signup",
   verify: "/verify-code",
-  resend: "/resend-code",
-  dashboard: "/dashboard"
+  dashboard: "/dashboard",
+  txs: "/transactions",
+  passkey: "/passkey",
+  logout: "/logout",
+} as const;
+
+export const AppServerRoutes = {
+  login: "/api/login",
+  logout: "/api/logout",
+  signup: "/api/signup",
+  verify: "/api/verify-code",
+  resend: "/api/resend-code",
+  dashboard: "/api/dashboard",
+  assets: "/assets",
+  passkeyChallenge: "/api/passkey-challenge",
+  registerPasskey: "/api/register-passkey",
+  connectPasskey: "/api/connect-passkey",
+  verifyPasskey: "/api/verify-passkey",
 } as const;
