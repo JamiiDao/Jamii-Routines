@@ -1,7 +1,9 @@
 mod challenge;
 pub use challenge::*;
 
-pub use bytes;
+mod ops;
+pub use ops::*;
+
 pub use coset;
 pub use p256;
 pub use passkey;

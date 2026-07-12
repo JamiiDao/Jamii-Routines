@@ -392,11 +392,19 @@ impl PasskeyHandler {
                     "Invalid public key for passkey stored in the server. The only solution is to try recovering the correct passkey",
                 ))
         )?;
+        let compressed = verifying_key.to_sec1_point(true).to_bytes();
+        assert!(compressed.len() == 33);
+
         let signature = Signature::from_der(input.response.signature.as_ref()).or(Err(
             HttpErrorWrapper::new()
                 .status_code(StatusCode::BAD_REQUEST)
                 .message("Invalid signature provided by the passkey authenticator."),
         ))?;
+        let raw_signature = signature.to_bytes().to_vec();
+        assert!(raw_signature.len() == 64);
+        println!("COMP PUBKEY:{compressed:?}");
+        println!("RAW SIGNATURE:{raw_signature:?}");
+        println!("MESSAGE:{message_signed:?}");
 
         verifying_key
             .verify(&message_signed, &signature)

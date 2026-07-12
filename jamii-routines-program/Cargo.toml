@@ -1,0 +1,17 @@
+[package]
+name    = "jamii-routines-program"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+pinocchio = "0.11.2"
+pinocchio-secp256r1-instruction = "0.1.2"
+pinocchio-tkn = {version = "0.2.2", features = [
+    "ext-metadata",
+    "ext-pointers",
+    "extensions",
+]}
+solana-program-log = "1.2.0"
